@@ -248,7 +248,7 @@ class MixtureGaussianDataset:
           break
         index += 1
 
-      x = np.random.multivariate_normal(self.means[index], np.eye(self.dimension)*variances[index])
+      x = np.random.multivariate_normal(self.means[index], np.eye(self.dimension)*self.variances[index])
       logit = self.kernel(x, self.theta_stars[index])
       y_val = 1 / (1 + np.exp(-logit))
       y = (np.random.random() >= y_val)*1.0
@@ -296,7 +296,7 @@ class SVMDataset:
           break
         index += 1
       
-      x = np.random.multivariate_normal(self.means[index], np.eye(self.dim)*variances[index])
+      x = np.random.multivariate_normal(self.means[index], np.eye(self.dim)*self.variances[index])
       y = self.class_list_per_center[index]
       X.append(x)
       Y.append(y)
