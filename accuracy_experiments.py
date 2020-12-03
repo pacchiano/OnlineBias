@@ -147,7 +147,7 @@ def run_and_plot(dataset, logging_frequency, max_num_steps, logistic_learning_ra
 
 
 def main():
-	dataset = "Adult"
+	dataset = "MultiSVM"
 	logging_frequency = 10
 	max_num_steps = 50000
 	logistic_learning_rate = .01
@@ -166,25 +166,25 @@ def main():
 	epsilon_greedy = False
 	epsilon = .1
 
-	# ### run without any optimism or epsilon greedy
-	# run_and_plot(dataset, logging_frequency, max_num_steps, logistic_learning_rate, threshold, 
-	# 			biased_threshold, batch_size, random_init, fit_intercept, num_experiments, 
-	# 			mahalanobis_regularizer, adjust_mahalanobis, epsilon_greedy, epsilon, alpha)
+	## run without any optimism or epsilon greedy
+	run_and_plot(dataset, logging_frequency, max_num_steps, logistic_learning_rate, threshold, 
+				biased_threshold, batch_size, random_init, fit_intercept, num_experiments, 
+				mahalanobis_regularizer, adjust_mahalanobis, epsilon_greedy, epsilon, alpha)
 
-	for alpha in [3,4]:
+	for alpha in [1, 2, 3, 4, 5, 10]:
 		adjust_mahalanobis = True
 		epsilon_greedy = False
-		for mahalanobis_regularizer in [1]:#[.1, 1]:
+		for mahalanobis_regularizer in [.1, 1]:#[.1, 1]:
 			run_and_plot(dataset, logging_frequency, max_num_steps, logistic_learning_rate, threshold, 
 				biased_threshold, batch_size, random_init, fit_intercept, num_experiments, 
 				mahalanobis_regularizer, adjust_mahalanobis, epsilon_greedy, epsilon, alpha)
 
-	# for epsilon in [.2]:#, .2, .5]:	
-	# 	adjust_mahalanobis = False
-	# 	epsilon_greedy = True
-	# 	run_and_plot(dataset, logging_frequency, max_num_steps, logistic_learning_rate, threshold, 
-	# 		biased_threshold, batch_size, random_init, fit_intercept, num_experiments, 
-	# 		mahalanobis_regularizer, adjust_mahalanobis, epsilon_greedy, epsilon, alpha)
+	for epsilon in [.1, .2]:#, .2, .5]:	
+		adjust_mahalanobis = False
+		epsilon_greedy = True
+		run_and_plot(dataset, logging_frequency, max_num_steps, logistic_learning_rate, threshold, 
+			biased_threshold, batch_size, random_init, fit_intercept, num_experiments, 
+			mahalanobis_regularizer, adjust_mahalanobis, epsilon_greedy, epsilon, alpha)
 
 
 

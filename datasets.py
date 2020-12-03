@@ -19,173 +19,174 @@ from sklearn import metrics
 import numpy.random as npr
 from scipy.stats import wasserstein_distance, ks_2samp
 from sklearn.linear_model import LogisticRegression
+from datasets_fairness import *
 
 #%matplotlib inline
 
 
-# @title Load Adult dataset
-# num_samples = 3000
+# # @title Load Adult dataset
+# # num_samples = 3000
 
-CATEGORICAL_COLUMNS = [
-    'workclass', 'education', 'marital_status', 'occupation', 'relationship',
-    'race', 'gender', 'native_country'
-]
-CONTINUOUS_COLUMNS = [
-    'age', 'capital_gain', 'capital_loss', 'hours_per_week', 'education_num'
-]
-COLUMNS = [
-    'age', 'workclass', 'fnlwgt', 'education', 'education_num',
-    'marital_status', 'occupation', 'relationship', 'race', 'gender',
-    'capital_gain', 'capital_loss', 'hours_per_week', 'native_country',
-    'income_bracket'
-]
-LABEL_COLUMN = 'label'
+# CATEGORICAL_COLUMNS = [
+#     'workclass', 'education', 'marital_status', 'occupation', 'relationship',
+#     'race', 'gender', 'native_country'
+# ]
+# CONTINUOUS_COLUMNS = [
+#     'age', 'capital_gain', 'capital_loss', 'hours_per_week', 'education_num'
+# ]
+# COLUMNS = [
+#     'age', 'workclass', 'fnlwgt', 'education', 'education_num',
+#     'marital_status', 'occupation', 'relationship', 'race', 'gender',
+#     'capital_gain', 'capital_loss', 'hours_per_week', 'native_country',
+#     'income_bracket'
+# ]
+# LABEL_COLUMN = 'label'
 
-PROTECTED_GROUPS = [
-    'gender_Female', 'gender_Male', 'race_White', 'race_Black'
-]
+# PROTECTED_GROUPS = [
+#     'gender_Female', 'gender_Male', 'race_White', 'race_Black'
+# ]
 
-def get_adult_data():
+# def get_adult_data():
  
-  train_df_raw = pd.read_csv('https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.data', 
-                             names=COLUMNS, skipinitialspace=True)
-  test_df_raw = pd.read_csv('https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.test', 
-                            names=COLUMNS, skipinitialspace=True, skiprows=1)
+#   train_df_raw = pd.read_csv('https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.data', 
+#                              names=COLUMNS, skipinitialspace=True)
+#   test_df_raw = pd.read_csv('https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.test', 
+#                             names=COLUMNS, skipinitialspace=True, skiprows=1)
 
-  # for column in train_df_raw.columns:
-  #   if train_df_raw[column].dtype.name == 'category':
-  #     categories_1 = set(train_df_raw[column].cat.categories)
-  #     categories_2 = set(test_df_raw[column].cat.categories)
-  #     categories = sorted(categories_1 | categories_2)
-  #     train_df_raw[column].cat.set_categories(categories, inplace=True)
-  #     test_df_raw[column].cat.set_categories(categories, inplace=True)
+#   # for column in train_df_raw.columns:
+#   #   if train_df_raw[column].dtype.name == 'category':
+#   #     categories_1 = set(train_df_raw[column].cat.categories)
+#   #     categories_2 = set(test_df_raw[column].cat.categories)
+#   #     categories = sorted(categories_1 | categories_2)
+#   #     train_df_raw[column].cat.set_categories(categories, inplace=True)
+#   #     test_df_raw[column].cat.set_categories(categories, inplace=True)
 
-  # train_df_raw.dropna(inplace=True)
-  # test_df_raw.dropna(inplace=True)
+#   # train_df_raw.dropna(inplace=True)
+#   # test_df_raw.dropna(inplace=True)
 
-  train_df_raw[LABEL_COLUMN] = (
-      train_df_raw['income_bracket'].apply(lambda x: '>50K' in x)).astype(int)
-  test_df_raw[LABEL_COLUMN] = (
-      test_df_raw['income_bracket'].apply(lambda x: '>50K' in x)).astype(int)
-  # Preprocessing Features
-  pd.options.mode.chained_assignment = None  # default='warn'
+#   train_df_raw[LABEL_COLUMN] = (
+#       train_df_raw['income_bracket'].apply(lambda x: '>50K' in x)).astype(int)
+#   test_df_raw[LABEL_COLUMN] = (
+#       test_df_raw['income_bracket'].apply(lambda x: '>50K' in x)).astype(int)
+#   # Preprocessing Features
+#   pd.options.mode.chained_assignment = None  # default='warn'
 
-  # Functions for preprocessing categorical and continuous columns.
-  def binarize_categorical_columns(input_train_df,
-                                   input_test_df,
-                                   categorical_columns=[]):
+#   # Functions for preprocessing categorical and continuous columns.
+#   def binarize_categorical_columns(input_train_df,
+#                                    input_test_df,
+#                                    categorical_columns=[]):
 
-    def fix_columns(input_train_df, input_test_df):
-      test_df_missing_cols = set(input_train_df.columns) - set(
-          input_test_df.columns)
-      for c in test_df_missing_cols:
-        input_test_df[c] = 0
-      train_df_missing_cols = set(input_test_df.columns) - set(
-          input_train_df.columns)
-      for c in train_df_missing_cols:
-        input_train_df[c] = 0
-      input_train_df = input_train_df[input_test_df.columns]
-      return input_train_df, input_test_df
+#     def fix_columns(input_train_df, input_test_df):
+#       test_df_missing_cols = set(input_train_df.columns) - set(
+#           input_test_df.columns)
+#       for c in test_df_missing_cols:
+#         input_test_df[c] = 0
+#       train_df_missing_cols = set(input_test_df.columns) - set(
+#           input_train_df.columns)
+#       for c in train_df_missing_cols:
+#         input_train_df[c] = 0
+#       input_train_df = input_train_df[input_test_df.columns]
+#       return input_train_df, input_test_df
 
-    # Binarize categorical columns.
-    binarized_train_df = pd.get_dummies(
-        input_train_df, columns=categorical_columns)
-    binarized_test_df = pd.get_dummies(
-        input_test_df, columns=categorical_columns)
-    # Make sure the train and test dataframes have the same binarized columns.
-    fixed_train_df, fixed_test_df = fix_columns(binarized_train_df,
-                                                binarized_test_df)
-    return fixed_train_df, fixed_test_df
+#     # Binarize categorical columns.
+#     binarized_train_df = pd.get_dummies(
+#         input_train_df, columns=categorical_columns)
+#     binarized_test_df = pd.get_dummies(
+#         input_test_df, columns=categorical_columns)
+#     # Make sure the train and test dataframes have the same binarized columns.
+#     fixed_train_df, fixed_test_df = fix_columns(binarized_train_df,
+#                                                 binarized_test_df)
+#     return fixed_train_df, fixed_test_df
   
-  def bucketize_continuous_column(input_train_df,
-                                  input_test_df,
-                                  continuous_column_name,
-                                  num_quantiles=None,
-                                  bins=None):
-    assert (num_quantiles is None or bins is None)
-    if num_quantiles is not None:
-      train_quantized, bins_quantized = pd.qcut(
-          input_train_df[continuous_column_name],
-          num_quantiles,
-          retbins=True,
-          labels=False)
-      input_train_df[continuous_column_name] = pd.cut(
-          input_train_df[continuous_column_name], bins_quantized, labels=False)
-      input_test_df[continuous_column_name] = pd.cut(
-          input_test_df[continuous_column_name], bins_quantized, labels=False)
-    elif bins is not None:
-      input_train_df[continuous_column_name] = pd.cut(
-          input_train_df[continuous_column_name], bins, labels=False)
-      input_test_df[continuous_column_name] = pd.cut(
-          input_test_df[continuous_column_name], bins, labels=False)
+#   def bucketize_continuous_column(input_train_df,
+#                                   input_test_df,
+#                                   continuous_column_name,
+#                                   num_quantiles=None,
+#                                   bins=None):
+#     assert (num_quantiles is None or bins is None)
+#     if num_quantiles is not None:
+#       train_quantized, bins_quantized = pd.qcut(
+#           input_train_df[continuous_column_name],
+#           num_quantiles,
+#           retbins=True,
+#           labels=False)
+#       input_train_df[continuous_column_name] = pd.cut(
+#           input_train_df[continuous_column_name], bins_quantized, labels=False)
+#       input_test_df[continuous_column_name] = pd.cut(
+#           input_test_df[continuous_column_name], bins_quantized, labels=False)
+#     elif bins is not None:
+#       input_train_df[continuous_column_name] = pd.cut(
+#           input_train_df[continuous_column_name], bins, labels=False)
+#       input_test_df[continuous_column_name] = pd.cut(
+#           input_test_df[continuous_column_name], bins, labels=False)
 
-  # Filter out all columns except the ones specified.
-  train_df = train_df_raw[CATEGORICAL_COLUMNS + CONTINUOUS_COLUMNS +
-                          [LABEL_COLUMN]]
-  test_df = test_df_raw[CATEGORICAL_COLUMNS + CONTINUOUS_COLUMNS +
-                        [LABEL_COLUMN]]
-  # Bucketize continuous columns.
-  bucketize_continuous_column(train_df, test_df, 'age', num_quantiles=4)
-  bucketize_continuous_column(
-      train_df, test_df, 'capital_gain', bins=[-1, 1, 4000, 10000, 100000])
-  bucketize_continuous_column(
-      train_df, test_df, 'capital_loss', bins=[-1, 1, 1800, 1950, 4500])
-  bucketize_continuous_column(
-      train_df, test_df, 'hours_per_week', bins=[0, 39, 41, 50, 100])
-  bucketize_continuous_column(
-      train_df, test_df, 'education_num', bins=[0, 8, 9, 11, 16])
-  train_df, test_df = binarize_categorical_columns(
-      train_df,
-      test_df,
-      categorical_columns=CATEGORICAL_COLUMNS + CONTINUOUS_COLUMNS)
-  feature_names = list(train_df.keys())
-  feature_names.remove(LABEL_COLUMN)
-  num_features = len(feature_names)
-  return train_df, test_df, feature_names
+#   # Filter out all columns except the ones specified.
+#   train_df = train_df_raw[CATEGORICAL_COLUMNS + CONTINUOUS_COLUMNS +
+#                           [LABEL_COLUMN]]
+#   test_df = test_df_raw[CATEGORICAL_COLUMNS + CONTINUOUS_COLUMNS +
+#                         [LABEL_COLUMN]]
+#   # Bucketize continuous columns.
+#   bucketize_continuous_column(train_df, test_df, 'age', num_quantiles=4)
+#   bucketize_continuous_column(
+#       train_df, test_df, 'capital_gain', bins=[-1, 1, 4000, 10000, 100000])
+#   bucketize_continuous_column(
+#       train_df, test_df, 'capital_loss', bins=[-1, 1, 1800, 1950, 4500])
+#   bucketize_continuous_column(
+#       train_df, test_df, 'hours_per_week', bins=[0, 39, 41, 50, 100])
+#   bucketize_continuous_column(
+#       train_df, test_df, 'education_num', bins=[0, 8, 9, 11, 16])
+#   train_df, test_df = binarize_categorical_columns(
+#       train_df,
+#       test_df,
+#       categorical_columns=CATEGORICAL_COLUMNS + CONTINUOUS_COLUMNS)
+#   feature_names = list(train_df.keys())
+#   feature_names.remove(LABEL_COLUMN)
+#   num_features = len(feature_names)
+#   return train_df, test_df, feature_names
 
 
-train_df, test_df, feature_names = get_adult_data()
-# train_df = train_df.sample(num_samples)
-# test_df = test_df.sample(int(num_samples/2))
+# train_df, test_df, feature_names = get_adult_data()
+# # train_df = train_df.sample(num_samples)
+# # test_df = test_df.sample(int(num_samples/2))
 
-X_train_adult_df = train_df[feature_names]
-y_train_adult_df = train_df[LABEL_COLUMN]
-X_test_adult_df = test_df[feature_names]
-y_test_adult_df = test_df[LABEL_COLUMN]
+# X_train_adult_df = train_df[feature_names]
+# y_train_adult_df = train_df[LABEL_COLUMN]
+# X_test_adult_df = test_df[feature_names]
+# y_test_adult_df = test_df[LABEL_COLUMN]
 
-X_train_adult = np.array(train_df[feature_names])
-y_train_adult = np.array(train_df[LABEL_COLUMN])
-X_test_adult = np.array(test_df[feature_names])
-y_test_adult = np.array(test_df[LABEL_COLUMN])
+# X_train_adult = np.array(train_df[feature_names])
+# y_train_adult = np.array(train_df[LABEL_COLUMN])
+# X_test_adult = np.array(test_df[feature_names])
+# y_test_adult = np.array(test_df[LABEL_COLUMN])
 
-protected_train_adult = [np.array(train_df[g]) for g in PROTECTED_GROUPS]
-protected_test_adult = [np.array(test_df[g]) for g in PROTECTED_GROUPS]
+# protected_train_adult = [np.array(train_df[g]) for g in PROTECTED_GROUPS]
+# protected_test_adult = [np.array(test_df[g]) for g in PROTECTED_GROUPS]
 
-def get_protected_dataframes(X_df, y_df, protected_groups):
-  protected_dataframes = []
-  for g in protected_groups:
-    X_protected = X_df[X_df[g] == 1]
-    y_protected = y_df[X_df[g] == 1]
-    protected_dataframes.append((X_protected, y_protected))
-  return protected_dataframes
+# def get_protected_dataframes(X_df, y_df, protected_groups):
+#   protected_dataframes = []
+#   for g in protected_groups:
+#     X_protected = X_df[X_df[g] == 1]
+#     y_protected = y_df[X_df[g] == 1]
+#     protected_dataframes.append((X_protected, y_protected))
+#   return protected_dataframes
 
-all_data_dataframes_train = (X_train_adult_df, y_train_adult_df)
-all_data_dataframes_test = (X_test_adult_df, y_test_adult_df)
-protected_dataframes_train = get_protected_dataframes(X_train_adult_df, y_train_adult_df, PROTECTED_GROUPS)
-protected_dataframes_test = get_protected_dataframes(X_test_adult_df, y_test_adult_df, PROTECTED_GROUPS)
-print(np.shape(X_train_adult))
-print(np.shape(X_test_adult))
+# all_data_dataframes_train = (X_train_adult_df, y_train_adult_df)
+# all_data_dataframes_test = (X_test_adult_df, y_test_adult_df)
+# protected_dataframes_train = get_protected_dataframes(X_train_adult_df, y_train_adult_df, PROTECTED_GROUPS)
+# protected_dataframes_test = get_protected_dataframes(X_test_adult_df, y_test_adult_df, PROTECTED_GROUPS)
+# print(np.shape(X_train_adult))
+# print(np.shape(X_test_adult))
 
-def get_adult_disjoint(protected):
-  combos = [(0,2), (0,3), (1,2), (1,3)]
-  new_protected = [np.where(np.logical_and(protected[a], protected[b]), 1, 0) for a,b in combos]
-  return new_protected
+# def get_adult_disjoint(protected):
+#   combos = [(0,2), (0,3), (1,2), (1,3)]
+#   new_protected = [np.where(np.logical_and(protected[a], protected[b]), 1, 0) for a,b in combos]
+#   return new_protected
 
-protected_train_adult_disjoint = get_adult_disjoint(protected_train_adult) 
-protected_test_adult_disjoint = get_adult_disjoint(protected_test_adult)
-PROTECTED_GROUPS = [
-    'Female_White', 'Female_Black', 'Male_White', 'Male_Black'                
-]
+# protected_train_adult_disjoint = get_adult_disjoint(protected_train_adult) 
+# protected_test_adult_disjoint = get_adult_disjoint(protected_test_adult)
+# PROTECTED_GROUPS = [
+#     'Female_White', 'Female_Black', 'Male_White', 'Male_Black'                
+# ]
 
 
 
@@ -366,15 +367,133 @@ def get_dataset(dataset):
     train_dataset = MixtureGaussianDataset(means, variances, probabilities, theta_stars, kernel = kernel)
     test_dataset = MixtureGaussianDataset(means, variances, probabilities, theta_stars, kernel = kernel)
   elif dataset == "Adult":
-    PROTECTED_GROUPS = [
-        'Female_White', 'Female_Black', 'Male_White', 'Male_Black'                
-    ]
-    protected_datasets_train = [DataSet(x_vals, y_vals) for (x_vals, y_vals) in protected_dataframes_train]
-    protected_datasets_test = [DataSet(x_vals, y_vals) for (x_vals, y_vals) in protected_dataframes_test]
+    # PROTECTED_GROUPS = [
+    #     'Female_White', 'Female_Black', 'Male_White', 'Male_Black'                
+    # ]''
+
+    joint_protected_groups = False
+    if joint_protected_groups: 
+      PROTECTED_GROUPS = AdultParams.JOINT_PROTECTED_GROUPS
+    else: 
+      PROTECTED_GROUPS = AdultParams.PROTECTED_GROUPS
+
+    dataframe_all_train, dataframe_all_test, feature_names = read_and_preprocess_adult_data_uai(remove_missing=False)
+    # dataframe_all_train = dataframe_all_train.sample(data_size, random_state=random_state)
+
+    # Identify portions of the data corresponding to particuar values of specific protected attributes.
+    dataframes_protected_train = collect_adult_protected_dataframes(dataframe_all_train, PROTECTED_GROUPS)
+    dataframes_protected_test = collect_adult_protected_dataframes(dataframe_all_test, PROTECTED_GROUPS)
+
+    # Split all data into features and labels.
+    x_all_train = dataframe_all_train[feature_names]
+    y_all_train = dataframe_all_train[AdultParams.LABEL_COLUMN]
+    x_all_test = dataframe_all_test[feature_names]
+    y_all_test = dataframe_all_test[AdultParams.LABEL_COLUMN]
+
+    x_protected_train = [df[feature_names] for df in dataframes_protected_train]
+    y_protected_train = [df[AdultParams.LABEL_COLUMN] for df in dataframes_protected_train]
+    x_protected_test = [df[feature_names] for df in dataframes_protected_test]
+    y_protected_test = [df[AdultParams.LABEL_COLUMN] for df in dataframes_protected_test]
+
+    train_dataset = DataSet(x_all_train, y_all_train)
+    test_dataset = DataSet(x_all_test, y_all_test) 
+
+    xy_protected_train = collect_adult_protected_xy(
+      x_all_train, y_all_train, PROTECTED_GROUPS)
+    xy_protected_test = collect_adult_protected_xy(
+      x_all_test, y_all_test, PROTECTED_GROUPS) 
+
+    protected_datasets_train = [DataSet(x_vals, y_vals) for (x_vals, y_vals) in xy_protected_train]
+    protected_datasets_test = [DataSet(x_vals, y_vals) for (x_vals, y_vals) in xy_protected_test]
 
 
-    train_dataset = DataSet(X_train_adult_df, y_train_adult_df)
-    test_dataset = DataSet(X_test_adult_df, y_test_adult_df)
+    # protected_datasets_train = [DataSet(x_vals, y_vals) for (x_vals, y_vals) in protected_dataframes_train]
+    # protected_datasets_test = [DataSet(x_vals, y_vals) for (x_vals, y_vals) in protected_dataframes_test]
+
+
+    # train_dataset = DataSet(X_train_adult_df, y_train_adult_df)
+    # test_dataset = DataSet(X_test_adult_df, y_test_adult_df)
+
+  elif dataset == "German":
+    PROTECTED_GROUPS = GermanParams.PROTECTED_THRESHOLDS
+
+    ### LOAD ALL THE DATA ###
+    dataframe_all_train, dataframe_all_test, feature_names = read_and_preprocess_german_data()
+    # dataframe_all_train = dataframe_all_train.sample(data_size, random_state=random_state)
+
+    # Identify portions of the data corresponding to particuar values of specific
+    # protected attributes.
+    dataframes_protected_train = collect_german_protected_dataframes(dataframe_all_train)
+    dataframes_protected_test = collect_german_protected_dataframes(dataframe_all_test)
+
+    # Split all data into features and labels.
+    x_all_train = dataframe_all_train[feature_names]
+    y_all_train = dataframe_all_train[GermanParams.LABEL_COLUMN]
+    x_all_test = dataframe_all_test[feature_names]
+    y_all_test = dataframe_all_test[GermanParams.LABEL_COLUMN]
+
+    x_protected_train = [df[feature_names] for df in dataframes_protected_train]
+    y_protected_train = [df[GermanParams.LABEL_COLUMN] for df in dataframes_protected_train]
+    x_protected_test = [df[feature_names] for df in dataframes_protected_test]
+    y_protected_test = [df[GermanParams.LABEL_COLUMN] for df in dataframes_protected_test]
+
+    # In utilities_final.py: Dataset class to be able to sample batches
+    train_dataset = DataSet(x_all_train, y_all_train)
+    test_dataset = DataSet(x_all_test, y_all_test) 
+
+    xy_protected_train = collect_german_protected_xy(
+      x_all_train, y_all_train, PROTECTED_GROUPS)
+    xy_protected_test = collect_german_protected_xy(
+      x_all_test, y_all_test, PROTECTED_GROUPS) 
+
+    protected_datasets_train = [DataSet(x_vals, y_vals) for (x_vals, y_vals) in xy_protected_train]
+    protected_datasets_test = [DataSet(x_vals, y_vals) for (x_vals, y_vals) in xy_protected_test]
+  
+
+
+  elif dataset == "Bank":
+
+    PROTECTED_GROUPS = BankParams.PROTECTED_GROUPS
+
+    ### LOAD ALL THE DATA ###
+    dataframe_all_train, dataframe_all_test, feature_names = read_and_preprocess_bank_data()
+    # dataframe_all_train = dataframe_all_train.sample(data_size, random_state=random_state)
+
+    # Identify portions of the data corresponding to particuar values of specific
+    # protected attributes.
+    dataframes_protected_train = collect_bank_protected_dataframes(dataframe_all_train, PROTECTED_GROUPS)
+    dataframes_protected_test = collect_bank_protected_dataframes(dataframe_all_test, PROTECTED_GROUPS)
+
+    # Split all data into features and regression targets.
+    x_all_train = dataframe_all_train[feature_names]
+    y_all_train = dataframe_all_train[BankParams.LABEL_COLUMN]
+    x_all_test = dataframe_all_test[feature_names]
+    y_all_test = dataframe_all_test[BankParams.LABEL_COLUMN]
+
+    x_protected_train = [df[feature_names] for df in dataframes_protected_train]
+    y_protected_train = [df[BankParams.LABEL_COLUMN] for df in dataframes_protected_train]
+    x_protected_test = [df[feature_names] for df in dataframes_protected_test]
+    y_protected_test = [df[BankParams.LABEL_COLUMN] for df in dataframes_protected_test]
+
+    # In utilities_final.py: Dataset class to be able to sample batches
+    train_dataset = DataSet(x_all_train, y_all_train)
+    test_dataset = DataSet(x_all_test, y_all_test) 
+
+    xy_protected_train = collect_bank_protected_xy(
+      x_all_train, y_all_train, PROTECTED_GROUPS)
+    xy_protected_test = collect_bank_protected_xy(
+      x_all_test, y_all_test, PROTECTED_GROUPS) 
+
+    protected_datasets_train = [DataSet(x_vals, y_vals) for (x_vals, y_vals) in xy_protected_train]
+    protected_datasets_test = [DataSet(x_vals, y_vals) for (x_vals, y_vals) in xy_protected_test]
+
+
+
+  
+
+
+
+
   elif dataset == "MultiSVM":
     PROTECTED_GROUPS = ["A", "B", "C"]
     d = 2

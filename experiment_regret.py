@@ -30,12 +30,13 @@ def run_regret_experiment( dataset, logging_frequency, max_num_steps,
 
 
   protected_datasets_train, protected_datasets_test, train_dataset, test_dataset = get_dataset(dataset)
-  wass_distances = [[] for _ in range(len(PROTECTED_GROUPS))]
-  logging_counters = [[] for _ in range(len(PROTECTED_GROUPS))]
+  num_protected_groups = len(protected_datasets_train)
+  wass_distances = [[] for _ in range(num_protected_groups)]
+  logging_counters = [[] for _ in range(num_protected_groups)]
   accuracies_list = []
-  protected_accuracies_list = [[] for _ in range(len(PROTECTED_GROUPS))]
+  protected_accuracies_list = [[] for _ in range(num_protected_groups)]
   biased_accuracies_list = []
-  biased_protected_accuracies_list = [[] for _ in range(len(PROTECTED_GROUPS))]
+  biased_protected_accuracies_list = [[] for _ in range(num_protected_groups)]
 
   train_regret = []
 
@@ -132,7 +133,7 @@ def run_regret_experiment( dataset, logging_frequency, max_num_steps,
       train_regret.append(batch_regret)
       train_accuracies_biased.append(biased_train_accuracy)
       timesteps.append(counter)
-      global_batch_test, protected_batches_test = get_batches(protected_datasets_test, test_dataset, 100000000) 
+      global_batch_test, protected_batches_test = get_batches(protected_datasets_test, test_dataset, 1000) 
       batch_X_test, batch_y_test = global_batch_test
       global_probabilities_list, protected_predictions = get_predictions(global_batch_test, protected_batches_test, model)
       total_accuracy, protected_accuracies = get_accuracies(global_batch_test, protected_batches_test, model, threshold)
