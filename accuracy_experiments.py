@@ -97,7 +97,6 @@ def run_and_plot(dataset, logging_frequency, max_num_steps, logistic_learning_ra
 
 
 
-
 	plt.plot(timesteps,mean_test_biased_accuracies_cum_averages, label = "Online Decision Test - no optimism", linestyle = "dashed", linewidth = 3.5, color="blue")
 	plt.fill_between(timesteps, mean_test_biased_accuracies_cum_averages - .5*std_test_biased_accuracies_cum_averages, 
 		mean_test_biased_accuracies_cum_averages + .5*std_test_biased_accuracies_cum_averages, color = "blue", alpha = .1 )
@@ -147,9 +146,9 @@ def run_and_plot(dataset, logging_frequency, max_num_steps, logistic_learning_ra
 
 
 def main():
-	dataset = "MultiSVM"
+	dataset = "Crime"
 	logging_frequency = 10
-	max_num_steps = 50000
+	max_num_steps = 5000
 	logistic_learning_rate = .01
 	threshold = .5
 	biased_threshold = .5
@@ -166,7 +165,7 @@ def main():
 	epsilon_greedy = False
 	epsilon = .1
 
-	## run without any optimism or epsilon greedy
+	# run without any optimism or epsilon greedy
 	run_and_plot(dataset, logging_frequency, max_num_steps, logistic_learning_rate, threshold, 
 				biased_threshold, batch_size, random_init, fit_intercept, num_experiments, 
 				mahalanobis_regularizer, adjust_mahalanobis, epsilon_greedy, epsilon, alpha)
