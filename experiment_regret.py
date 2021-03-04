@@ -45,11 +45,13 @@ def run_regret_experiment_pytorch( dataset,
     baseline_steps = 10000,
     baseline_batch_size =100,
     regret_wrt_baseline = True,
-    MLP = True):
+    MLP = True, 
+    representation_layer_size = 10,
+    verbose = False):
 
 
   protected_datasets_train, protected_datasets_test, train_dataset, test_dataset = get_dataset(dataset)
-  baseline_model = TorchBinaryLogisticRegression(random_init = random_init, fit_intercept=True, alpha = alpha, MLP = MLP)
+  baseline_model = TorchBinaryLogisticRegression(random_init = random_init, fit_intercept=True, alpha = alpha, MLP = MLP, representation_layer_size = representation_layer_size)
   
 
 
@@ -106,8 +108,8 @@ def run_regret_experiment_pytorch( dataset,
 
   colors = ["red", "green", "violet", "orange"]
 
-  model =  TorchBinaryLogisticRegression(random_init = random_init, fit_intercept=True, alpha = alpha, MLP = MLP)
-  model_biased = TorchBinaryLogisticRegression(random_init = random_init, fit_intercept=True, alpha = alpha, MLP = MLP)
+  model =  TorchBinaryLogisticRegression(random_init = random_init, fit_intercept=True, alpha = alpha, MLP = MLP, representation_layer_size = representation_layer_size)
+  model_biased = TorchBinaryLogisticRegression(random_init = random_init, fit_intercept=True, alpha = alpha, MLP = MLP, representation_layer_size =representation_layer_size)
 
   cummulative_data_covariance = [] 
   inverse_cummulative_data_covariance = []
@@ -177,7 +179,13 @@ def run_regret_experiment_pytorch( dataset,
       accept_point = global_biased_prediction[i] > biased_threshold or (epsilon_greedy and np.random.random() < epsilon)
       #print(accept_point, " ", batch_y[i], accept_point == batch_y[i])
       #if accept_point == 
-      biased_train_accuracy += (accept_point == batch_y[i]) 
+      # print("############")
+      # print("global biased prediction ", global_biased_prediction[i])
+      # print("accept point ", accept_point)
+      # print("batch y i ", batch_y[i])
+      # print("outcome ", accept_point == batch_y[i])
+
+      biased_train_accuracy += (accept_point == batch_y[i])*1.0 
       # import IPython
       # IPython.embed()
       # raise ValueError("asldkfm")
@@ -202,6 +210,10 @@ def run_regret_experiment_pytorch( dataset,
     #print("biased batch size ", biased_batch_size)
     biased_batch_X = np.array(biased_batch_X)
     biased_batch_y = np.array(biased_batch_y)
+    # print(biased_train_accuracy)
+    # IPython.embed()
+    # raise ValueError("asdlfkm")
+
     biased_train_accuracy = biased_train_accuracy/len(global_biased_prediction)
     batch_regret = batch_regret/len(global_biased_prediction)*1.0
 
@@ -275,25 +287,16 @@ def run_regret_experiment_pytorch( dataset,
       biased_total_accuracy, biased_protected_accuracies = get_accuracies(global_batch_test, protected_batches_test, model_biased, threshold)
       biased_accuracies_list.append(biased_total_accuracy)
 
+      if verbose:
+        print("Iteration {}".format(counter))
+        print("Total proportion of biased data {}".format(1.0*biased_data_totals/(batch_size*counter)))
 
-    ## Compute accuracy diagnostics.
-    #if counter % logging_frequency == 0:
-      print("Iteration {}".format(counter))
-      print("Total proportion of biased data {}".format(1.0*biased_data_totals/(batch_size*counter)))
+        ### Compute the global accuracy. 
+        print("                                                               Accuracy ", total_accuracy)
+                  
+        ### Compute the global accuracy. 
+        print("                                                               Biased Accuracy ", biased_total_accuracy)
 
-      ### Compute the global accuracy. 
-      print("                                                               Accuracy ", total_accuracy)
-
-      # plt.figure(figsize=(10,11))
-      # plt.ylim(.2, 1)
-                
-      ### Compute the global accuracy. 
-      print("                                                               Biased Accuracy ", biased_total_accuracy)
-
-      
-      # plt.plot(timesteps,biased_accuracies_list, label = "Biased Test", linestyle = "dashed", linewidth = 3.5, color="blue")
-      # plt.plot(timesteps,accuracies_list, label = "Unbiased", linestyle = "dashed", linewidth = 3.5, color = "red")
-      # plt.plot(timesteps, train_accuracies_biased, label = "Biased Train", linestyle = "dashed", linewidth = 3.5, color = "violet"  )
       test_biased_accuracies_cum_averages = np.cumsum(biased_accuracies_list)
       test_biased_accuracies_cum_averages = test_biased_accuracies_cum_averages/(np.arange(len(timesteps))+1)
       accuracies_cum_averages = np.cumsum(accuracies_list)
@@ -304,7 +307,7 @@ def run_regret_experiment_pytorch( dataset,
       #train_cum_regret = train_cum_regret/(np.arange(len(timesteps)) + 1)
 
 
-  return timesteps, test_biased_accuracies_cum_averages, accuracies_cum_averages, train_biased_accuracies_cum_averages, train_cum_regret, loss_validation, loss_validation_biased, loss_validation_baseline
+  return timesteps, test_biased_accuracies_cum_averages, accuracies_cum_averages, train_biased_accuracies_cum_averages, train_cum_regret, loss_validation, loss_validation_biased, loss_validation_baseline, baseline_accuracy
 
 
 

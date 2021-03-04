@@ -86,17 +86,17 @@ class Feedforward(torch.nn.Module):
 
 class TorchBinaryLogisticRegression:
     def __init__(self, random_init = False, fit_intercept = True, dim = None, alpha = 1, 
-      MLP = True, hidden_size = 100):
+      MLP = True, representation_layer_size = 100):
         self.fit_intercept = fit_intercept
         self.theta = None
         self.random_init = random_init
         self.alpha = alpha        
         self.MLP = MLP
-        self.hidden_size = hidden_size
+        self.representation_layer_size = representation_layer_size
         self.criterion = torch.nn.BCELoss()
 
         if dim != None:
-          self.network = Feedforward(dim, hidden_size, MLP)
+          self.network = Feedforward(dim, representation_layer_size, MLP)
           #self.initialize_gaussian()
     
     def initialize_gaussian(self):
@@ -109,7 +109,7 @@ class TorchBinaryLogisticRegression:
       #if self.MLP:
       if self.fit_intercept:
             batch_X = self.__add_intercept(batch_X)
-      self.network = Feedforward(batch_X.shape[1], self.hidden_size, self.MLP)
+      self.network = Feedforward(batch_X.shape[1], self.representation_layer_size, self.MLP)
       
       #self.initialize_gaussian()
 
