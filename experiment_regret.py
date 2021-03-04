@@ -14,11 +14,11 @@ import requests
 import pandas as pd
 import tempfile
 import matplotlib.pyplot as plt
-from sklearn.model_selection import train_test_split
-from sklearn import metrics
+# from sklearn.model_selection import train_test_split
+# from sklearn import metrics
 import numpy.random as npr
 from scipy.stats import wasserstein_distance, ks_2samp
-from sklearn.linear_model import LogisticRegression
+# from sklearn.linear_model import LogisticRegression
 
 import torch
 

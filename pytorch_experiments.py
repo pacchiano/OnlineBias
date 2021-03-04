@@ -15,11 +15,11 @@ import pandas as pd
 import tempfile
 import matplotlib.pyplot as plt
 import ray
-from sklearn.model_selection import train_test_split
-from sklearn import metrics
+# from sklearn.model_selection import train_test_split
+# from sklearn import metrics
 import numpy.random as npr
 from scipy.stats import wasserstein_distance, ks_2samp
-from sklearn.linear_model import LogisticRegression
+#from sklearn.linear_model import LogisticRegression
 import os
 import pickle
 
@@ -33,7 +33,7 @@ ray.init()
 def run_experiment_parallel(dataset, logging_frequency, max_num_steps, logistic_learning_rate,threshold, biased_threshold, batch_size, 
 	random_init, fit_intercept, mahalanobis_regularizer, adjust_mahalanobis, epsilon_greedy, epsilon, alpha, MLP, representation_layer_size):
 
-	timesteps, test_biased_accuracies_cum_averages, accuracies_cum_averages, train_biased_accuracies_cum_averages, train_cum_regret, loss_validation, loss_validation_biased, loss_baseline = run_regret_experiment_pytorch( dataset, 
+	timesteps, test_biased_accuracies_cum_averages, accuracies_cum_averages, train_biased_accuracies_cum_averages, train_cum_regret, loss_validation, loss_validation_biased, loss_baseline, baseline_accuracy = run_regret_experiment_pytorch( dataset, 
 																					logging_frequency, 
 																					max_num_steps, 
 																				    logistic_learning_rate, 
@@ -47,7 +47,7 @@ def run_experiment_parallel(dataset, logging_frequency, max_num_steps, logistic_
 																				    alpha, 
 																				    MLP = MLP,
 																				    representation_layer_size = representation_layer_size )
-	return timesteps, test_biased_accuracies_cum_averages, accuracies_cum_averages, train_biased_accuracies_cum_averages, train_cum_regret,loss_validation, loss_validation_biased, loss_baseline
+	return timesteps, test_biased_accuracies_cum_averages, accuracies_cum_averages, train_biased_accuracies_cum_averages, train_cum_regret,loss_validation, loss_validation_biased, loss_baseline, baseline_accuracy
 
 
 
