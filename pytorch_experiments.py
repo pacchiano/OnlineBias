@@ -32,7 +32,7 @@ from experiment_regret import *
 def run_experiment_parallel(dataset, logging_frequency, max_num_steps, logistic_learning_rate,threshold, biased_threshold, batch_size, 
 	random_init, fit_intercept, mahalanobis_regularizer, adjust_mahalanobis, epsilon_greedy, epsilon, alpha, MLP):
 
-	timesteps, test_biased_accuracies_cum_averages, accuracies_cum_averages, train_biased_accuracies_cum_averages, train_cum_regret, loss_validation, loss_validation_biased = run_regret_experiment_pytorch( dataset, 
+	timesteps, test_biased_accuracies_cum_averages, accuracies_cum_averages, train_biased_accuracies_cum_averages, train_cum_regret, loss_validation, loss_validation_biased, loss_baseline = run_regret_experiment_pytorch( dataset, 
 																					logging_frequency, 
 																					max_num_steps, 
 																				    logistic_learning_rate, 
@@ -45,7 +45,7 @@ def run_experiment_parallel(dataset, logging_frequency, max_num_steps, logistic_
 																				    epsilon, 
 																				    alpha, 
 																				    MLP = MLP )
-	return timesteps, test_biased_accuracies_cum_averages, accuracies_cum_averages, train_biased_accuracies_cum_averages, train_cum_regret,loss_validation, loss_validation_biased
+	return timesteps, test_biased_accuracies_cum_averages, accuracies_cum_averages, train_biased_accuracies_cum_averages, train_cum_regret,loss_validation, loss_validation_biased, loss_baseline
 
 
 
@@ -53,13 +53,18 @@ def run_experiment_parallel(dataset, logging_frequency, max_num_steps, logistic_
 
 def run_and_plot(dataset, logging_frequency, max_num_steps, logistic_learning_rate, threshold, 
 	biased_threshold, batch_size, random_init, fit_intercept, num_experiments, mahalanobis_regularizer, adjust_mahalanobis, epsilon_greedy, epsilon, alpha, MLP ):
-
-
 	path = os.getcwd()
-	if not os.path.isdir("{}/experiment_results/data/T{}".format(path, max_num_steps)):
+
+	network_type = "MLP" if MLP else "Linear"
+	base_data_directory = "{}/experiment_results/T{}/{}/data".format(path, max_num_steps, network_type)
+	base_figs_directory = "{}/experiment_results/T{}/{}/figs".format(path, max_num_steps, network_type)
+
+
+	if not os.path.isdir(base_data_directory):
 		try:
-			os.mkdir("{}/experiment_results/data/T{}".format(path, max_num_steps))
-			os.mkdir("{}/experiment_results/figs/T{}".format(path, max_num_steps))
+
+			os.makedirs(base_figs_directory)
+			os.makedirs(base_data_directory)
 		except OSError:
 			print("Creation of directories failed")
 		else:
@@ -70,6 +75,8 @@ def run_and_plot(dataset, logging_frequency, max_num_steps, logistic_learning_ra
 	if epsilon_greedy and adjust_mahalanobis:
 		raise ValueError("Both epsilon greedy and adjust mahalanobis are on!")
 
+	# IPython.embed()
+	# raise ValueError("asdlfkm")
 	# experiment_summaries = [ run_experiment_parallel.remote( dataset, logging_frequency, max_num_steps, logistic_learning_rate,threshold, biased_threshold, batch_size, 
 	# random_init, fit_intercept, mahalanobis_regularizer, adjust_mahalanobis, epsilon_greedy, epsilon, alpha, MLP ) for _ in range(num_experiments)]
 
@@ -89,6 +96,7 @@ def run_and_plot(dataset, logging_frequency, max_num_steps, logistic_learning_ra
 	loss_validation_summary = np.zeros((num_experiments, int(max_num_steps/logging_frequency)))
 	loss_validation_biased_summary = np.zeros((num_experiments, int(max_num_steps/logging_frequency)))
 
+	loss_validation_baseline_summary = np.zeros(num_experiments)
 
 
 	for j in range(num_experiments):
@@ -98,7 +106,7 @@ def run_and_plot(dataset, logging_frequency, max_num_steps, logistic_learning_ra
 		train_cum_regret_summary[j, :] = experiment_summaries[j][4]
 		loss_validation_summary[j,:] = experiment_summaries[j][5]
 		loss_validation_biased_summary[j, :] = experiment_summaries[j][6]
-
+		loss_validation_baseline_summary[j] = experiment_summaries[j][7]
 
 
 	mean_test_biased_accuracies_cum_averages = np.mean(test_biased_accuracies_cum_averages_summary, axis = 0)
@@ -118,6 +126,10 @@ def run_and_plot(dataset, logging_frequency, max_num_steps, logistic_learning_ra
 
 	mean_loss_validation_biased_averages = np.mean(loss_validation_biased_summary, axis = 0)
 	std_loss_validation_biased_averages = np.std(loss_validation_biased_summary, axis = 0)
+
+	mean_loss_validation_baseline_summary = np.mean(loss_validation_baseline_summary)
+	std_loss_validation_baseline_summary = np.std(loss_validation_baseline_summary)
+
 
 
 
@@ -146,7 +158,7 @@ def run_and_plot(dataset, logging_frequency, max_num_steps, logistic_learning_ra
 	plt.xlabel("Timesteps")
 	plt.ylabel("Accuracy")
 	plt.legend(loc = "lower right")
-	plt.savefig("./experiment_results/figs/T{}/{}.png".format(max_num_steps, plot_name))
+	plt.savefig("{}/{}.png".format(base_figs_directory, plot_name))
 	plt.close('all')
 
 
@@ -171,7 +183,7 @@ def run_and_plot(dataset, logging_frequency, max_num_steps, logistic_learning_ra
 	plt.xlabel("Timesteps")
 	plt.ylabel("Regret")
 	plt.legend(loc = "lower right")
-	plt.savefig("./experiment_results/figs/T{}/{}.png".format(max_num_steps, plot_name))
+	plt.savefig("{}/{}.png".format(base_figs_directory, plot_name))
 	plt.close('all')
 
 
@@ -184,6 +196,9 @@ def run_and_plot(dataset, logging_frequency, max_num_steps, logistic_learning_ra
 	plt.fill_between(timesteps, mean_loss_validation_biased_averages - .5*std_loss_validation_biased_averages, 
 		mean_loss_validation_biased_averages + .5*std_loss_validation_biased_averages, color = "red", alpha = .1)
 
+	plt.plot(timesteps, [mean_loss_validation_baseline_summary]*len(timesteps), label = "Baseline Loss", linestyle = "dashed", linewidth = 3.5, color = "black")
+	plt.fill_between(timesteps, [mean_loss_validation_baseline_summary - .5*std_loss_validation_baseline_summary]*len(timesteps), 
+		[mean_loss_validation_baseline_summary + .5*std_loss_validation_baseline_summary]*len(timesteps), color = "black", alpha = .1)
 
 	if epsilon_greedy:
 		plt.title("Loss {} - Epsilon Greedy {}".format(dataset, epsilon))
@@ -201,7 +216,7 @@ def run_and_plot(dataset, logging_frequency, max_num_steps, logistic_learning_ra
 	plt.xlabel("Timesteps")
 	plt.ylabel("Loss")
 	plt.legend(loc = "lower right")
-	plt.savefig("./experiment_results/figs/T{}/{}.png".format(max_num_steps, plot_name))
+	plt.savefig("{}/{}.png".format(base_figs_directory, plot_name))
 	plt.close('all')
 
 
@@ -209,14 +224,14 @@ def run_and_plot(dataset, logging_frequency, max_num_steps, logistic_learning_ra
 	pickle.dump((timesteps, mean_test_biased_accuracies_cum_averages, std_test_biased_accuracies_cum_averages, mean_accuracies_cum_averages, std_accuracies_cum_averages, 
 		mean_train_biased_accuracies_cum_averages, std_train_biased_accuracies_cum_averages, 
 		max_num_steps, mean_loss_validation_averages, std_loss_validation_averages,mean_loss_validation_biased_averages, 
-		std_loss_validation_biased_averages ), open("./experiment_results/data/T{}/{}.p".format(max_num_steps, plot_name), "wb"))
+		std_loss_validation_biased_averages ), open("{}/{}.p".format(base_data_directory, plot_name), "wb"))
 
 
 
 def main():
 	dataset = "Adult"
 	logging_frequency = 10
-	max_num_steps = 5000
+	max_num_steps = 1000
 	logistic_learning_rate = .01
 	threshold = .5
 	biased_threshold = .5
@@ -233,9 +248,9 @@ def main():
 	epsilon_greedy = False
 	epsilon = .1
 
-	MLP = False
+	MLP = True
 
-	# run without any optimism or epsilon greedy
+	#run without any optimism or epsilon greedy
 	run_and_plot(dataset, logging_frequency, max_num_steps, logistic_learning_rate, threshold, 
 				biased_threshold, batch_size, random_init, fit_intercept, num_experiments, 
 				mahalanobis_regularizer, adjust_mahalanobis, epsilon_greedy, epsilon, alpha, MLP)

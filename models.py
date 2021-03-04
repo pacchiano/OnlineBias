@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 
 import scipy.stats
 
+import IPython
 import requests
 import pandas as pd
 import tempfile
@@ -48,18 +49,34 @@ class Feedforward(torch.nn.Module):
             else:
               self.fc1 = torch.nn.Linear(self.input_size, 1, bias = False)
 
-        def forward(self, x):
+
+
+        def forward(self, x, inverse_data_covariance = [], alpha = 0):
             if self.MLP:
               hidden = self.fc1(x)
               representation = self.relu(hidden)
               output = self.fc2(representation)
-              output = self.sigmoid(output)
+
               #return output, relu
             else:
               representation= x
               output = self.fc1(x)
-              output = self.sigmoid(output)
-            return output#, representation
+
+            if len(inverse_data_covariance) != 0:
+                # IPython.embed()
+                # raise ValueError("asdlfkm")
+                output = torch.squeeze(output) + alpha*torch.sqrt(torch.matmul( representation, torch.matmul(inverse_data_covariance.float(), representation.t() )   ).diag() )
+
+
+
+
+            output = self.sigmoid(output)
+
+            return output, representation
+
+
+      #     return self.__sigmoid(torch.mv(batch_X.float(), self.theta) + torch.from_numpy(self.alpha*self.__inverse_covariance_norm(batch_X, inverse_data_covariance)))#.numpy()
+
 
         # def representation(self, x):
         #     hidden = self.fc1(x)
@@ -116,10 +133,16 @@ class TorchBinaryLogisticRegression:
           return self.__add_intercept(batch_X)
         return batch_X
  
-    def update_batch(self, batch_X):
-        if self.fit_intercept:
-          return self.__add_intercept(batch_X)
-        return batch_X
+    # def update_batch(self, batch_X):
+    #     if self.fit_intercept:
+    #       return self.__add_intercept(batch_X)
+    #     return batch_X
+
+    def get_representation(self, batch_X):
+      batch_X = self.__update_batch(batch_X) 
+      batch_X = torch.from_numpy(batch_X)
+      _, representations = self.network(batch_X.float())
+      return representations
 
 
     def get_loss(self, batch_X, batch_y):
@@ -132,7 +155,7 @@ class TorchBinaryLogisticRegression:
       # raise ValueError("Asdflkm")
       #if self.MLP:
       #prob_predictions, representations =  self.network(batch_X.float())#.squeeze()
-      prob_predictions =  self.network(batch_X.float())#.squeeze()
+      prob_predictions, _ =  self.network(batch_X.float())#.squeeze()
 
       # import IPython
       # IPython.embed()
@@ -155,9 +178,13 @@ class TorchBinaryLogisticRegression:
 
       #if self.MLP:
       #prob_predictions, representations =  self.network(batch_X.float())#.squeeze()
-      prob_predictions =  self.network(batch_X.float())#.squeeze()
+      #if len(inverse_data_covariance) == 0:
+      prob_predictions, _ =  self.network(batch_X.float(), inverse_data_covariance = inverse_data_covariance, alpha = self.alpha)#.squeeze()
+      #prob_predictions = torch.squeeze(prob_predictions)
+      #prob_predictions, _  =  self.network(batch_X.float())#.squeeze()
 
-      return prob_predictions
+
+      return torch.squeeze(prob_predictions)
       # else:
 
       #   if len(inverse_data_covariance) == 0:     
@@ -176,6 +203,7 @@ class TorchBinaryLogisticRegression:
       prob_predictions = self.predict_prob(batch_X, inverse_data_covariance )
       
       thresholded_predictions= prob_predictions > threshold
+      thresholded_predictions = torch.squeeze(thresholded_predictions)
       thresholded_predictions = thresholded_predictions.numpy()
       return thresholded_predictions
 
