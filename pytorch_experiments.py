@@ -262,7 +262,7 @@ def main():
 	epsilon_greedy = False
 	epsilon = .1
 
-	MLP = True
+	MLP = False
 	representation_layer_size = 10
 
 	#run without any optimism or epsilon greedy
