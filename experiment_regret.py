@@ -50,11 +50,12 @@ def run_regret_experiment_pytorch( dataset,
     verbose = True):
 
 
-  protected_datasets_train, protected_datasets_test, train_dataset, test_dataset = get_dataset(dataset)
+  protected_datasets_train, protected_datasets_test, train_dataset, test_dataset = get_dataset(dataset, batch_size, 1000)
   baseline_model = TorchBinaryLogisticRegression(random_init = random_init, fit_intercept=True, alpha = alpha, 
                 MLP = MLP, representation_layer_size = representation_layer_size)
   
-
+  if dataset == "MNIST":
+    baseline_batch_size = batch_size
 
 
   for i in range(baseline_steps):
@@ -79,7 +80,7 @@ def run_regret_experiment_pytorch( dataset,
 
 
   with torch.no_grad():
-    baseline_batch_test, protected_batches_test = get_batches(protected_datasets_test, test_dataset, 10000)
+    baseline_batch_test, protected_batches_test = get_batches(protected_datasets_test, test_dataset, 1000)
     baseline_accuracy, protected_accuracies = get_accuracies(baseline_batch_test, protected_batches_test, baseline_model, threshold)
     loss_validation_baseline = baseline_model.get_loss(baseline_batch_test[0], baseline_batch_test[1])
 

@@ -14,6 +14,8 @@ import requests
 import pandas as pd
 import tempfile
 import matplotlib.pyplot as plt
+import torch
+from torchvision import datasets, transforms
 # from sklearn.model_selection import train_test_split
 # from sklearn import metrics
 import numpy.random as npr
@@ -46,6 +48,27 @@ class DataSet:
 
     return (X,Y)
 
+
+
+class MNISTDataset:
+  def __init__(self, train, batch_size, symbol):
+    
+    transform=transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize((0.1307,), (0.3081,))
+        ])
+
+    self.symbol = symbol
+    self.batch_size = batch_size
+    self.dataset = datasets.MNIST('./', train= train, download = True, transform = transform)
+    self.data_loader = torch.utils.data.DataLoader(self.dataset, batch_size = batch_size, shuffle = True)
+  def get_batch(self, batch_size):
+    if batch_size != self.batch_size:
+      raise ValueError("Provided batch size does not agree with the stored batch size. MNIST.")
+    [X,Y] = next(iter(self.data_loader))
+    Y = (Y == self.symbol)*1.0
+    X = X.view(self.batch_size, -1)
+    return (X.numpy(),Y.numpy())
 
 
 class MixtureGaussianDataset:
@@ -185,7 +208,7 @@ def get_batches(protected_datasets, global_dataset, batch_size):
   return global_batch, protected_batches
 
 
-def get_dataset(dataset):
+def get_dataset(dataset, batch_size, test_batch_size):
 
   if dataset == "Mixture":
     PROTECTED_GROUPS = ["A", "B", "C", "D"]
@@ -361,6 +384,13 @@ def get_dataset(dataset):
       protected_datasets_test = [DataSet(x_vals, y_vals) for (x_vals, y_vals) in xy_protected_test]
 
 
+  elif dataset == "MNIST":
+    PROTECTED_GROUPS = ["None"]
+    protected_datasets_train = [MNISTDataset(train = True, batch_size = batch_size, symbol = 5 )]
+    train_dataset = MNISTDataset(train = True, batch_size = batch_size, symbol = 5)
+
+    protected_datasets_test = [MNISTDataset(train = False, batch_size = test_batch_size, symbol = 5)] 
+    test_dataset = MNISTDataset(train = False, batch_size = test_batch_size, symbol = 5)
 
 
 
