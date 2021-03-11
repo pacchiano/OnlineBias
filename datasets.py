@@ -172,7 +172,9 @@ class SVMDataset:
           model.plot(min_x, max_x)
       plt.grid(True)
       plt.legend(loc = "lower right")
-    
+      #IPython.embed()
+      
+      #plt.show()
 
 
 
@@ -363,12 +365,12 @@ def get_dataset(dataset):
 
 
   elif dataset == "MultiSVM":
-    PROTECTED_GROUPS = ["A", "B", "C"]
+    PROTECTED_GROUPS = ["A", "B", "C", "D"]
     d = 2
-    means = [ np.array([0, 5]), np.array([0, 0]), np.array([5, -2])]
-    variances = [.5, .5, .5]
-    probabilities = [ .3, .3, .4]
-    class_list_per_center = [1, 0, 1]
+    means = [ np.array([0, 5]), np.array([0, 0]), np.array([5, -2]), np.array([5, 5]) ]
+    variances = [.5, .5, .5, .5]
+    probabilities = [ .3, .3, .2, .2]
+    class_list_per_center = [1, 0, 1, 0]
     
     protected_datasets_train = [SVMDataset([means[i]], [variances[i]], [1],  [class_list_per_center[i]]) for i in range(len(PROTECTED_GROUPS))]
     protected_datasets_test = [SVMDataset([means[i]], [variances[i]], [1],  [class_list_per_center[i]]) for i in range(len(PROTECTED_GROUPS))]
